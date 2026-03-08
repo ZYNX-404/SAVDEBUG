@@ -291,6 +291,44 @@ namespace SaccFlightAndVehicles
         [Header("Debug:")]
         [FieldChangeCallback(nameof(EngineOn))] public bool _EngineOn = false;
 
+        public void DebugUdoNext1()
+        {
+            Debug.LogWarning(
+                $"[SAV UDO_NEXT+1] | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={DbgObjTag()} | " +
+                $"raw={_EngineOn} | " +
+                $"ThrottleInput={ThrottleInput:F2} | " +
+                $"PlayerThrottle={PlayerThrottle:F2} | " +
+                $"EngineOutput={EngineOutput:F2}"
+            );
+        }
+
+        public void DebugUdoNext2()
+        {
+            Debug.LogWarning(
+                $"[SAV UDO_NEXT+2] | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={DbgObjTag()} | " +
+                $"raw={_EngineOn} | " +
+                $"ThrottleInput={ThrottleInput:F2} | " +
+                $"PlayerThrottle={PlayerThrottle:F2} | " +
+                $"EngineOutput={EngineOutput:F2}"
+            );
+        }
+
+        public void DebugUdoNext3()
+        {
+            Debug.LogWarning(
+                $"[SAV UDO_NEXT+3] | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={DbgObjTag()} | " +
+                $"raw={_EngineOn} | " +
+                $"ThrottleInput={ThrottleInput:F2} | " +
+                $"PlayerThrottle={PlayerThrottle:F2} | " +
+                $"EngineOutput={EngineOutput:F2}"
+            );
+        }
 
         void Start()
         {
@@ -301,18 +339,52 @@ namespace SaccFlightAndVehicles
                 Debug.Log($"SAV COMPONENT [{i}] id={all[i].GetInstanceID()}");
             }
         }
-        
+        private bool _dbgLastRawEngineOn;
+        private int _dbgLastEnginePropSetFrame = -9999;
+        private bool _dbgLastEnginePropSetValue = false;
 
+        private string DbgObjTag()
+        {
+            string entityTag = "null";
+            if (EntityControl != null)
+            {
+                entityTag = EntityControl.gameObject.name + "#" + EntityControl.gameObject.GetInstanceID();
+            }
+
+            return gameObject.name + "#" + gameObject.GetInstanceID() + " | entity=" + entityTag;
+        }
 
         public bool EngineOn
         {
             set
             {
-                //disable thrust vectoring if engine off
+                Debug.Log(
+                    $"[SAV ENGINEPROP] SET PRE | " +
+                    $"frame={Time.frameCount} | " +
+                    $"obj={DbgObjTag()} | " +
+                    $"incoming={value} | " +
+                    $"before={_EngineOn} | " +
+                    $"IsOwner={IsOwner} | " +
+                    $"Piloting={EntityControl.Piloting} | " +
+                    $"Occupied={Occupied} | " +
+                    $"pilotLeftFlag={EntityControl.pilotLeftFlag} | " +
+                    $"Using={EntityControl.Using} | " +
+                    $"EngineOutput={EngineOutput:F3} | " +
+                    $"ThrottleInput={ThrottleInput:F3} | " +
+                    $"PlayerThrottle={PlayerThrottle:F3}"
+                );
+
+                // disable thrust vectoring if engine off
                 if (value)
                 {
                     if (!_EngineOn)
                     {
+                        Debug.Log(
+                            $"[SAV ENGINEPROP] ON BRANCH ENTER | " +
+                            $"frame={Time.frameCount} | " +
+                            $"obj={DbgObjTag()}"
+                        );
+
                         EntityControl.SendEventToExtensions("SFEXT_G_EngineOn");
 
                         Debug.Log("SAV STEP 1 before SetBool");
@@ -339,12 +411,32 @@ namespace SaccFlightAndVehicles
                                 wheel.brakeTorque = 0;
                             }
                         }
+
+                        Debug.Log(
+                            $"[SAV ENGINEPROP] ON BRANCH EXIT | " +
+                            $"frame={Time.frameCount} | " +
+                            $"obj={DbgObjTag()}"
+                        );
+                    }
+                    else
+                    {
+                        Debug.Log(
+                            $"[SAV ENGINEPROP] ON BRANCH SKIP_ALREADY_ON | " +
+                            $"frame={Time.frameCount} | " +
+                            $"obj={DbgObjTag()}"
+                        );
                     }
                 }
                 else
                 {
                     if (_EngineOn)
                     {
+                        Debug.LogWarning(
+                            $"[SAV ENGINEPROP] OFF BRANCH ENTER | " +
+                            $"frame={Time.frameCount} | " +
+                            $"obj={DbgObjTag()}"
+                        );
+
                         EntityControl.SendEventToExtensions("SFEXT_G_EngineOff");
                         Taxiinglerper = 0;
                         VehicleAnimator.SetBool("EngineOn", false);
@@ -359,11 +451,80 @@ namespace SaccFlightAndVehicles
                         if (HasWheelColliders)
                         {
                             foreach (WheelCollider wheel in VehicleWheelColliders)
-                            { wheel.motorTorque = 0; }
+                            {
+                                wheel.motorTorque = 0;
+                            }
                         }
+
+                        Debug.LogWarning(
+                            $"[SAV ENGINEPROP] OFF BRANCH EXIT | " +
+                            $"frame={Time.frameCount} | " +
+                            $"obj={DbgObjTag()}"
+                        );
+                    }
+                    else
+                    {
+                        Debug.LogWarning(
+                            $"[SAV ENGINEPROP] OFF BRANCH SKIP_ALREADY_OFF | " +
+                            $"frame={Time.frameCount} | " +
+                            $"obj={DbgObjTag()}"
+                        );
                     }
                 }
+
                 _EngineOn = value;
+
+                _dbgLastEnginePropSetFrame = Time.frameCount;
+                _dbgLastEnginePropSetValue = value;
+                _dbgLastRawEngineOn = _EngineOn;
+
+                if (value)
+                {
+                    Debug.LogWarning(
+                        $"[SAV UDO_SCHEDULE] | " +
+                        $"frame={Time.frameCount} | " +
+                        $"obj={DbgObjTag()} | " +
+                        $"raw={_EngineOn}"
+                    );
+                    Debug.LogWarning(
+                        $"[SAV UDO_DIRECT] | " +
+                        $"frame={Time.frameCount} | " +
+                        $"obj={DbgObjTag()} | " +
+                        $"raw={_EngineOn}"
+                    );
+
+                    DebugUdoNext1();
+
+                    SendCustomEventDelayedFrames(nameof(DebugUdoNext1), 1);
+                    SendCustomEventDelayedFrames(nameof(DebugUdoNext2), 2);
+                    SendCustomEventDelayedFrames(nameof(DebugUdoNext3), 3);
+
+                    StartEngineBurstTrace();
+                }
+
+                Debug.LogWarning(
+                    $"[SAV ENGINEWATCH] POST-SET IMMEDIATE | " +
+                    $"frame={Time.frameCount} | " +
+                    $"obj={DbgObjTag()} | " +
+                    $"raw={_EngineOn} | " +
+                    $"incoming={value}"
+                );
+
+                Debug.Log(
+                    $"[SAV ENGINEPROP] SET POST | " +
+                    $"frame={Time.frameCount} | " +
+                    $"obj={DbgObjTag()} | " +
+                    $"incoming={value} | " +
+                    $"after={_EngineOn} | " +
+                    $"IsOwner={IsOwner} | " +
+                    $"Piloting={EntityControl.Piloting} | " +
+                    $"Occupied={Occupied} | " +
+                    $"pilotLeftFlag={EntityControl.pilotLeftFlag} | " +
+                    $"Using={EntityControl.Using} | " +
+                    $"EngineOutput={EngineOutput:F3} | " +
+                    $"ThrottleInput={ThrottleInput:F3} | " +
+                    $"PlayerThrottle={PlayerThrottle:F3}"
+                );
             }
             get => _EngineOn;
         }
@@ -372,9 +533,46 @@ namespace SaccFlightAndVehicles
         public void SFEXT_L_SetEngineOff()
         { SendCustomNetworkEvent(VRC.Udon.Common.Interfaces.NetworkEventTarget.All, nameof(SetEngineOff)); }
         public void SetEngineOn()
-        { EngineOn = true; }
+        {
+            Debug.Log(
+                $"[SAV ENGINE] SetEngineOn PRE | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={name} | " +
+                $"before={_EngineOn} | " +
+                $"IsOwner={IsOwner}"
+            );
+
+            EngineOn = true;
+
+            Debug.Log(
+                $"[SAV ENGINE] SetEngineOn POST | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={name} | " +
+                $"after={_EngineOn} | " +
+                $"IsOwner={IsOwner}"
+            );
+        }
+
         public void SetEngineOff()
-        { EngineOn = false; }
+        {
+            Debug.LogWarning(
+                $"[SAV ENGINE] SetEngineOff PRE | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={name} | " +
+                $"before={_EngineOn} | " +
+                $"IsOwner={IsOwner}"
+            );
+
+            EngineOn = false;
+
+            Debug.LogWarning(
+                $"[SAV ENGINE] SetEngineOff POST | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={name} | " +
+                $"after={_EngineOn} | " +
+                $"IsOwner={IsOwner}"
+            );
+        }
         [System.NonSerializedAttribute] public float AllGs;
         [System.NonSerializedAttribute][UdonSynced(UdonSyncMode.Linear)] public float EngineOutput = 0f;
         [System.NonSerializedAttribute] public Vector3 CurrentVel = Vector3.zero;
@@ -746,7 +944,12 @@ namespace SaccFlightAndVehicles
         public Vector3 VelToSet;
 #endif
         public void SFEXT_L_EntityStart()
-        {
+        {   
+             Debug.Log(
+                $"[SAV CANARY] EntityStart | " +
+                $"obj={name} | " +
+                $"frame={Time.frameCount}"
+            );
             /*Debug.Log(
                 $"SAV INIT PHASE 1 ENTER | " +
                 $"animNull={VehicleAnimator == null} | " +
@@ -944,6 +1147,20 @@ namespace SaccFlightAndVehicles
         }
         private void LateUpdate()
         {
+            BurstTrace("LateUpdate");
+            if (_EngineOn != _dbgLastRawEngineOn)
+            {
+                Debug.LogWarning(
+                    $"[SAV ENGINEWATCH] RAW FLIP DETECTED @LateUpdate | " +
+                    $"frame={Time.frameCount} | " +
+                    $"obj={DbgObjTag()} | " +
+                    $"rawPrev={_dbgLastRawEngineOn} | rawNow={_EngineOn} | " +
+                    $"lastPropSetFrame={_dbgLastEnginePropSetFrame} | " +
+                    $"lastPropSetValue={_dbgLastEnginePropSetValue}"
+                );
+
+                _dbgLastRawEngineOn = _EngineOn;
+            }
             float DeltaTime = Time.deltaTime;
             if (IsOwner)//works in editor or ingame
             {
@@ -1411,9 +1628,98 @@ namespace SaccFlightAndVehicles
                                                         //AirSpeed = AirVel.magnitude;
             }
         }
+        private int _dbgBurstFrames = 0;
+        private int _dbgBurstLastFrame = -1;
+
+        private void StartEngineBurstTrace()
+        {
+            _dbgBurstFrames = 3;
+            _dbgBurstLastFrame = Time.frameCount - 1;
+        }
+
+        private void BurstTrace(string phase)
+        {
+            if (_dbgBurstFrames <= 0) return;
+
+            if (_dbgBurstLastFrame != Time.frameCount)
+            {
+                _dbgBurstLastFrame = Time.frameCount;
+                _dbgBurstFrames--;
+            }
+
+            Debug.LogWarning(
+                $"[SAV ENGINE BURST] phase={phase} | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={DbgObjTag()} | " +
+                $"raw={_EngineOn} | " +
+                $"lastPropSetFrame={_dbgLastEnginePropSetFrame} | " +
+                $"lastPropSetValue={_dbgLastEnginePropSetValue} | " +
+                $"IsOwner={IsOwner} | " +
+                $"Piloting={EntityControl.Piloting} | " +
+                $"Occupied={Occupied} | " +
+                $"pilotLeftFlag={EntityControl.pilotLeftFlag} | " +
+                $"Using={EntityControl.Using}"
+            );
+        }
+        public override void OnPreSerialization()
+        {
+            Debug.LogWarning(
+                $"[SAV PRESERIALIZE] | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={DbgObjTag()} | " +
+                $"raw={_EngineOn} | " +
+                $"IsOwner={IsOwner} | " +
+                $"entity.IsOwner={(EntityControl != null ? EntityControl.IsOwner : false)}"
+            );
+        }
+        public override void OnDeserialization()
+        {
+            Debug.LogWarning(
+                $"[SAV DESERIALIZE] | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={DbgObjTag()} | " +
+                $"raw={_EngineOn} | " +
+                $"IsOwner={IsOwner} | " +
+                $"entity.IsOwner={(EntityControl != null ? EntityControl.IsOwner : false)}"
+            );
+        }
+        private void Update()
+        {
+            BurstTrace("Update");
+            if (_EngineOn != _dbgLastRawEngineOn)
+            {
+                Debug.LogWarning(
+                    $"[SAV ENGINEWATCH] RAW FLIP DETECTED @Update | " +
+                    $"frame={Time.frameCount} | " +
+                    $"obj={DbgObjTag()} | " +
+                    $"rawPrev={_dbgLastRawEngineOn} | rawNow={_EngineOn} | " +
+                    $"lastPropSetFrame={_dbgLastEnginePropSetFrame} | " +
+                    $"lastPropSetValue={_dbgLastEnginePropSetValue}"
+                );
+
+                _dbgLastRawEngineOn = _EngineOn;
+            }
+
+            // 既に Update があるなら、その既存処理をこの下に残す
+        }
+
         private void FixedUpdate()
         {
+            BurstTrace("FixedUpdate");
+        if (_EngineOn != _dbgLastRawEngineOn)
+        {
+            Debug.LogWarning(
+                $"[SAV ENGINEWATCH] RAW FLIP DETECTED @FixedUpdate | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={DbgObjTag()} | " +
+                $"rawPrev={_dbgLastRawEngineOn} | rawNow={_EngineOn} | " +
+                $"lastPropSetFrame={_dbgLastEnginePropSetFrame} | " +
+                $"lastPropSetValue={_dbgLastEnginePropSetValue}"
+            );
 
+            _dbgLastRawEngineOn = _EngineOn;
+        }
+                
 #if UNITY_EDITOR
             if (SetVel)
             {
@@ -1448,19 +1754,38 @@ namespace SaccFlightAndVehicles
                         SetRotInputs();
                     }
                     //Lerp the inputs for 'engine response', throttle decrease response is slower than increase (EngineSpoolDownSpeedMulti)
-                    
+
+                    /*Debug.LogWarning(
+                        $"[SAV ENGINEWATCH] PRE-OUTPUT | " +
+                        $"frame={Time.frameCount} | " +
+                        $"obj={DbgObjTag()} | " +
+                        $"raw={_EngineOn} | " +
+                        $"lastPropSetFrame={_dbgLastEnginePropSetFrame} | " +
+                        $"lastPropSetValue={_dbgLastEnginePropSetValue}"
+                    );
+                    Debug.LogWarning(
+                        $"[SAV ENGINEWATCH] MID-FIXED | " +
+                        $"frame={Time.frameCount} | " +
+                        $"obj={DbgObjTag()} | " +
+                        $"raw={_EngineOn} | " +
+                        $"lastPropSetFrame={_dbgLastEnginePropSetFrame} | " +
+                        $"lastPropSetValue={_dbgLastEnginePropSetValue}"
+                    );                    
                     Debug.Log(
-                        $"ENGINE OUTPUT PATH | " +
+                        $"[ENGINE OUTPUT PATH] | " +
+                        $"frame={Time.frameCount} | " +
+                        $"obj={DbgObjTag()} | " +
                         $"EngineOn={EngineOn} | " +
                         $"Piloting={EntityControl.Piloting} | " +
                         $"Occupied={Occupied} | " +
                         $"Asleep={Asleep} | " +
-                        $"DisablePhysicsAndInputs={DisablePhysicsAndInputs} | " +
+                        $"DisablePhysicsAndInputs={_DisablePhysicsAndInputs} | " +
                         $"_DisableThrottleControl={_DisableThrottleControl} | " +
                         $"ThrottleInput={ThrottleInput:F2} | " +
                         $"PlayerThrottle={PlayerThrottle:F2} | " +
                         $"EngineOutput={EngineOutput:F2}"
-                    );
+                        ); */
+                        
                     if (_EngineOn)
                     {
                         if (EngineOutput < ThrottleInput)
@@ -1472,12 +1797,16 @@ namespace SaccFlightAndVehicles
                     {
                         EngineOutput = Mathf.Lerp(EngineOutput, 0, 1 - Mathf.Pow(0.5f, AccelerationResponse * EngineSpoolDownSpeedMulti * DeltaTime));
                     }
-                    Debug.Log(
-                        $"ENGINE OUTPUT POST | " +
-                        $"EngineOn={EngineOn} | " +
-                        $"ThrottleInput={ThrottleInput:F2} | " +
-                        $"EngineOutput={EngineOutput:F2}"
-                    );
+                        /*
+                        Debug.Log(
+                            $"[ENGINE OUTPUT POST] | " +
+                            $"frame={Time.frameCount} | " +
+                            $"obj={DbgObjTag()} | " +
+                            $"EngineOn={EngineOn} | " +
+                            $"ThrottleInput={ThrottleInput:F2} | " +
+                            $"EngineOutput={EngineOutput:F2}"
+                        );
+                        */
                     float sidespeed = 0;
                     float downspeed = 0;
                     float SpeedLiftFactor = 0;
@@ -2380,62 +2709,168 @@ namespace SaccFlightAndVehicles
         {
             NumPassengers--;
         }
+        [Header("Debug / TakeOwnership Trace")]
+        public bool DebugTakeOwnershipTrace = true;
+        public bool DebugBypassTakeOwnershipSetEngineOff = false;
+        private int _dbgTakeOwnershipSeq = 0;
         public void SFEXT_O_TakeOwnership()
-        {   
+        {
+            int dbgSeq = ++_dbgTakeOwnershipSeq;
 
-            Debug.Log(
-                $"SAV TAKEOWNERSHIP ENTER | " +
-                $"_EngineOn={_EngineOn} | " +
-                $"IsOwner={IsOwner} | " +
-                $"Piloting={EntityControl.Piloting} | " +
-                $"Occupied={Occupied} | " +
-                $"pilotLeftFlag={EntityControl.pilotLeftFlag} | " +
-                $"Using={EntityControl.Using}"
-            );
+            if (DebugTakeOwnershipTrace)
+            {
+                Debug.Log(
+                    $"[SAV TAKEOWN #{dbgSeq}] ENTER PRE-SETOWNER | " +
+                    $"frame={Time.frameCount} | " +
+                    $"_EngineOn={_EngineOn} | " +
+                    $"IsOwner={IsOwner} | " +
+                    $"Piloting={EntityControl.Piloting} | " +
+                    $"Occupied={Occupied} | " +
+                    $"pilotLeftFlag={EntityControl.pilotLeftFlag} | " +
+                    $"Using={EntityControl.Using} | " +
+                    $"EngineOutput={EngineOutput:F3} | " +
+                    $"ThrottleInput={ThrottleInput:F3} | " +
+                    $"PlayerThrottle={PlayerThrottle:F3}"
+                );
+            }
+
             IsOwner = true;
+
+            if (DebugTakeOwnershipTrace)
+            {
+                Debug.Log(
+                    $"[SAV TAKEOWN #{dbgSeq}] ENTER POST-SETOWNER | " +
+                    $"frame={Time.frameCount} | " +
+                    $"_EngineOn={_EngineOn} | " +
+                    $"IsOwner={IsOwner} | " +
+                    $"Piloting={EntityControl.Piloting} | " +
+                    $"Occupied={Occupied} | " +
+                    $"pilotLeftFlag={EntityControl.pilotLeftFlag} | " +
+                    $"Using={EntityControl.Using} | " +
+                    $"EngineOutput={EngineOutput:F3} | " +
+                    $"ThrottleInput={ThrottleInput:F3} | " +
+                    $"PlayerThrottle={PlayerThrottle:F3}"
+                );
+            }
+
             if (Asleep) { WakeUp(); }
             GDamageToTake = 0f;
             VertGs = 0f;
             AllGs = 0f;
             for (int i = 0; i < NumFUinAvgTime; i++) { FrameGs[i] = Vector3.zero; }
+
             if (_EngineOn)
             {
-                //The !Occupied check is to check if the player just left the instance while not in the vehicle
-                //We want the vehicle to keep flying itself if it was left in auto-hover/fly straight mode with no pilot and its owner leaves
+                bool keepEngineState = (EntityControl.Piloting || !Occupied) && !EntityControl.pilotLeftFlag;
 
-                //OnPlayerLeft() runs after OnOwnershipTransferred() // <--- no longer true
-                //!EntityControl.pilotLeftFlag is now needed because the order is random
-                //if OnPlayerLeft() runs first, '&& !EntityControl.pilotLeftFlag' ensures this still works
-
-                if ((EntityControl.Piloting || !Occupied) && !EntityControl.pilotLeftFlag)
-                // pilot wasn't in the vehicle when you took ownership, or you just took ownership by getting in
-                {
-                    if (!_DisableThrottleControl)
-                    {
-                        PlayerThrottle = ThrottleInput = EngineOutputLastFrame = EngineOutput;
-                    }
-                }
-                else// user was in the vehicle when they left or you took ownership with a grapple
+                if (DebugTakeOwnershipTrace)
                 {
                     Debug.Log(
-                        $"SAV TAKEOWNERSHIP OFF BRANCH | " +
-                        $"_EngineOn={_EngineOn} | " +
-                        $"IsOwner={IsOwner} | " +
+                        $"[SAV TAKEOWN #{dbgSeq}] ENGINEON EVAL | " +
+                        $"frame={Time.frameCount} | " +
+                        $"keepEngineState={keepEngineState} | " +
+                        $"DisableThrottleControl={_DisableThrottleControl} | " +
                         $"Piloting={EntityControl.Piloting} | " +
                         $"Occupied={Occupied} | " +
                         $"pilotLeftFlag={EntityControl.pilotLeftFlag} | " +
                         $"Using={EntityControl.Using}"
                     );
-                    SendCustomNetworkEvent(VRC.Udon.Common.Interfaces.NetworkEventTarget.All, nameof(SetEngineOff));
+                }
+
+                // pilot wasn't in the vehicle when you took ownership, or you just took ownership by getting in
+                if (keepEngineState)
+                {
+                    if (!_DisableThrottleControl)
+                    {
+                        PlayerThrottle = ThrottleInput = EngineOutputLastFrame = EngineOutput;
+
+                        if (DebugTakeOwnershipTrace)
+                        {
+                            Debug.Log(
+                                $"[SAV TAKEOWN #{dbgSeq}] KEEP BRANCH APPLY THROTTLE | " +
+                                $"frame={Time.frameCount} | " +
+                                $"EngineOutput={EngineOutput:F3} | " +
+                                $"EngineOutputLastFrame={EngineOutputLastFrame:F3} | " +
+                                $"ThrottleInput={ThrottleInput:F3} | " +
+                                $"PlayerThrottle={PlayerThrottle:F3}"
+                            );
+                        }
+                    }
+                    else if (DebugTakeOwnershipTrace)
+                    {
+                        Debug.Log(
+                            $"[SAV TAKEOWN #{dbgSeq}] KEEP BRANCH NO-THROTTLE-COPY | " +
+                            $"frame={Time.frameCount} | " +
+                            $"_DisableThrottleControl={_DisableThrottleControl}"
+                        );
+                    }
+                }
+                // user was in the vehicle when they left or you took ownership with a grapple
+                else
+                {
+                    if (DebugTakeOwnershipTrace)
+                    {
+                        Debug.LogWarning(
+                            $"[SAV TAKEOWN #{dbgSeq}] OFF BRANCH PRE | " +
+                            $"frame={Time.frameCount} | " +
+                            $"_EngineOn={_EngineOn} | " +
+                            $"IsOwner={IsOwner} | " +
+                            $"Piloting={EntityControl.Piloting} | " +
+                            $"Occupied={Occupied} | " +
+                            $"pilotLeftFlag={EntityControl.pilotLeftFlag} | " +
+                            $"Using={EntityControl.Using} | " +
+                            $"EngineOutput={EngineOutput:F3} | " +
+                            $"ThrottleInput={ThrottleInput:F3} | " +
+                            $"PlayerThrottle={PlayerThrottle:F3}"
+                        );
+                    }
+
+                    if (!DebugBypassTakeOwnershipSetEngineOff)
+                    {
+                        if (DebugTakeOwnershipTrace)
+                        {
+                            Debug.LogWarning(
+                                $"[SAV TAKEOWN #{dbgSeq}] OFF BRANCH SEND SetEngineOff | " +
+                                $"frame={Time.frameCount}"
+                            );
+                        }
+
+                        SendCustomNetworkEvent(
+                            VRC.Udon.Common.Interfaces.NetworkEventTarget.All,
+                            nameof(SetEngineOff)
+                        );
+                    }
+                    else if (DebugTakeOwnershipTrace)
+                    {
+                        Debug.LogWarning(
+                            $"[SAV TAKEOWN #{dbgSeq}] OFF BRANCH BYPASS SetEngineOff | " +
+                            $"frame={Time.frameCount}"
+                        );
+                    }
+
                     PlayerThrottle = ThrottleInput = 0;
                     EngineOutputLastFrame = EngineOutput;
+
+                    if (DebugTakeOwnershipTrace)
+                    {
+                        Debug.LogWarning(
+                            $"[SAV TAKEOWN #{dbgSeq}] OFF BRANCH POST | " +
+                            $"frame={Time.frameCount} | " +
+                            $"EngineOutput={EngineOutput:F3} | " +
+                            $"EngineOutputLastFrame={EngineOutputLastFrame:F3} | " +
+                            $"ThrottleInput={ThrottleInput:F3} | " +
+                            $"PlayerThrottle={PlayerThrottle:F3}"
+                        );
+                    }
                 }
             }
+
             if (!UsingManualSync)
             {
                 VehicleRigidbody.drag = 0;
                 VehicleRigidbody.angularDrag = 0;
             }
+
             SetupGCalcValues();
         }
         public void SFEXT_O_LoseOwnership()

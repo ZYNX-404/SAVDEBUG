@@ -19989,6 +19989,8 @@ MonoBehaviour:
   VelToSet: {x: 0, y: 0, z: 0}
   NumFUinAvgTime: 1
   Gs_all: {x: 0, y: 0, z: 0}
+  DebugTakeOwnershipTrace: 1
+  DebugBypassTakeOwnershipSetEngineOff: 0
 --- !u!4 &4358696472979041089
 Transform:
   m_ObjectHideFlags: 0
@@ -119484,6 +119486,7 @@ MonoBehaviour:
   DoEngineStartupAnimBool: 0
   EngineAnimator: {fileID: 0}
   AnimEngineStartupAnimBool: EngineStarting
+  DebugBypassEngineOffWrite: 0
 --- !u!224 &8390022489920745775
 RectTransform:
   m_ObjectHideFlags: 0

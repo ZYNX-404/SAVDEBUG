@@ -170,14 +170,95 @@ namespace SaccFlightAndVehicles
         }
         public void JustEngineOn()
         {
+            Debug.LogWarning(
+                $"[DFUNC JUSTENGINEON] ENTER | " +
+                $"frame={Time.frameCount} | " +
+                $"time={Time.time:F2} | " +
+                $"obj={name}#{gameObject.GetInstanceID()} | " +
+                $"SAV._EngineOn(before)={(bool)SAVControl.GetProgramVariable("_EngineOn")}"
+            );
             SAVControl.SetProgramVariable("_EngineOn", true);
+            Debug.LogWarning(
+                $"[DFUNC JUSTENGINEON] EXIT | " +
+
+                $"frame={Time.frameCount} | " +
+                $"time={Time.time:F2} | " +
+                $"obj={name}#{gameObject.GetInstanceID()} | " +
+                $"SAV._EngineOn(after)={(bool)SAVControl.GetProgramVariable("_EngineOn")}"
+            );
+        }
+
+        public bool DebugBypassEngineOffWrite = true;
+        private bool _dbgLastRawEngineOn;
+        private int _dbgLastEnginePropSetFrame = -9999;
+        private bool _dbgLastEnginePropSetValue = false;
+
+        private string DbgObjTag()
+        {
+            string entityTag = "null";
+            if (EntityControl != null)
+            {
+                entityTag = EntityControl.gameObject.name + "#" + EntityControl.gameObject.GetInstanceID();
+            }
+
+            return gameObject.name + "#" + gameObject.GetInstanceID() + " | entity=" + entityTag;
         }
         public void EngineOff()
         {
-            if ((bool)SAVControl.GetProgramVariable("_EngineOn") && !(bool)SAVControl.GetProgramVariable("_PreventEngineToggle"))
+            bool engineOn = (bool)SAVControl.GetProgramVariable("_EngineOn");
+            bool preventToggle = (bool)SAVControl.GetProgramVariable("_PreventEngineToggle");
+
+            Debug.LogWarning(
+                $"[DFUNC ENGINE] EngineOff PRE | " +
+                $"frame={Time.frameCount} | " +
+                $"obj={name} | " +
+                $"SAV._EngineOn={engineOn} | " +
+                $"Prevent={preventToggle} | " +
+                $"Time.time={Time.time:F3} | " +
+                $"StartUpTime={StartUpTime:F3}"
+            );
+
+            if (engineOn && !preventToggle)
             {
                 ToggleTime = Time.time - StartUpTime;
-                SAVControl.SetProgramVariable("_EngineOn", false);
+
+                if (!DebugBypassEngineOffWrite)
+                {
+                    Debug.LogWarning(
+                        $"[DFUNC ENGINE] EngineOff WRITE PRE | " +
+                        $"frame={Time.frameCount} | " +
+                        $"obj={name} | " +
+                        $"ToggleTime={ToggleTime:F3}"
+                    );
+
+                    SAVControl.SetProgramVariable("_EngineOn", false);
+
+                    Debug.LogWarning(
+                        $"[DFUNC ENGINE] EngineOff WRITE POST | " +
+                        $"frame={Time.frameCount} | " +
+                        $"obj={name} | " +
+                        $"SAV._EngineOn={(bool)SAVControl.GetProgramVariable("_EngineOn")} | " +
+                        $"ToggleTime={ToggleTime:F3}"
+                    );
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"[DFUNC ENGINE] EngineOff BYPASS WRITE | " +
+                        $"frame={Time.frameCount} | " +
+                        $"obj={name} | " +
+                        $"ToggleTime={ToggleTime:F3}"
+                    );
+                }
+            }
+            else
+            {
+                Debug.LogWarning(
+                    $"[DFUNC ENGINE] EngineOff SKIP | " +
+                    $"frame={Time.frameCount} | " +
+                    $"obj={name} | " +
+                    $"reason=" + (!engineOn ? "AlreadyOff" : "PreventToggle")
+                );
             }
         }
         public void SFEXT_G_EngineOff()
