@@ -1,0 +1,93 @@
+# ========== Unity ==========
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+UserSettings/
+
+# Asset import / cache
+Assets/AssetStoreTools*
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Unity auto-generated
+sysinfo.txt
+
+# Crash / diagnostics
+*.stackdump
+
+# ========== Important ==========
+# Keep Unity .meta files tracked
+# DO NOT ignore:
+# *.meta# ========== Unity ==========
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Mm]emoryCaptures/
+UserSettings/
+
+# Asset import / cache
+Assets/AssetStoreTools*
+
+# Visual Studio / Rider / VS Code
+.vs/
+.idea/
+.vscode/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Unity auto-generated
+sysinfo.txt
+
+# Crash / diagnostics
+*.stackdump
+
+# ========== Important ==========
+# Keep Unity .meta files tracked
+# DO NOT ignore:
+# *.meta
